@@ -1,37 +1,58 @@
-"""Geração de SMILES base: anéis decorados com auxocromos aleatórios."""
-
 import random
+import pandas as pd
+
+def inserir_fragmento(smiles: str, pos: int, frag: str) -> str:
+    """
+    Insere um fragmento em uma posição específica de uma string SMILES.
+
+    O fragmento é inserido como ramificação, entre parênteses.
+    """
+    pos = max(0, min(pos, len(smiles)))
+    return smiles[:pos] + f"({frag})" + smiles[pos:]
 
 
-def _inserir_fragmento_em_posicao(smiles: str, posicao: int, fragmento: str) -> str:
-    """Insere `(fragmento)` na posição especificada do SMILES."""
-    posicao_valida = max(0, min(posicao, len(smiles)))
-    return smiles[:posicao_valida] + f"({fragmento})" + smiles[posicao_valida:]
-
-
-def _adicionar_auxocromos(
+def gerar_smiles_modificado(
     smiles_base: str,
-    auxocromos: dict[int, str],
-    posicoes_disponiveis: list[int],
-    quantidade: int,
-) -> str:
+    frags_dict: dict[int, str],
+    posicoes_possiveis: list[int],
+    n_fragmentos: int,
+) -> tuple[str, list[int], list[str], list[str]]:
     """
-    Insere `quantidade` auxocromos aleatórios em `smiles_base`.
+    Gera uma variante de um SMILES base inserindo fragmentos aleatórios.
 
-    As inserções são feitas da maior para a menor posição
-    para não deslocar os índices anteriores.
+    As posições são sorteadas sem repetição.
+    Os fragmentos podem se repetir.
+    As inserções são feitas da maior posição para a menor para não deslocar índices.
     """
-    posicoes_escolhidas = random.sample(posicoes_disponiveis, quantidade)
-    insercoes = [
-        (pos, auxocromos[random.randint(1, len(auxocromos))])
-        for pos in posicoes_escolhidas
-    ]
-    insercoes.sort(reverse=True)  # maior posição primeiro
+    smiles_mod = smiles_base
 
-    smiles = smiles_base
-    for posicao, frag in insercoes:
-        smiles = _inserir_fragmento_em_posicao(smiles, posicao, frag)
-    return smiles
+    n_fragmentos = min(n_fragmentos, len(posicoes_possiveis))
+
+    posicoes_sorteadas = random.sample(posicoes_possiveis, n_fragmentos)
+
+    chaves_frags_disponiveis = list(frags_dict.keys())
+    chaves_sorteadas = random.choices(chaves_frags_disponiveis, k=n_fragmentos)
+    fragmentos_sorteados = [frags_dict[chave] for chave in chaves_sorteadas]
+
+    insercoes = list(zip(posicoes_sorteadas, fragmentos_sorteados, chaves_sorteadas))
+    insercoes.sort(key=lambda x: x[0], reverse=True)
+
+    posicoes_usadas = []
+    frags_usados = []
+    chaves_usadas = []
+
+    for pos, frag, chave in insercoes:
+        smiles_mod = inserir_fragmento(smiles_mod, pos, frag)
+
+        posicoes_usadas.append(pos)
+        frags_usados.append(frag)
+        chaves_usadas.append(str(chave))
+
+    posicoes_usadas.reverse()
+    frags_usados.reverse()
+    chaves_usadas.reverse()
+
+    return smiles_mod, posicoes_usadas, frags_usados, chaves_usadas
 
 
 def gerar_fragmentos_com_auxocromos(
@@ -40,41 +61,46 @@ def gerar_fragmentos_com_auxocromos(
     repeticoes: int = 200,
     posicoes_disponiveis: list[int] | None = None,
     quantidade_auxocromos: int = 3,
-) -> dict[int, str]:
+) -> pd.DataFrame:
     """
     Gera variantes de cada anel com auxocromos inseridos aleatoriamente.
 
-    Parâmetros
-    ----------
-    aneis : dict[int, str]
-        Dicionário de SMILES base dos anéis.
-    auxocromos : dict[int, str]
-        Dicionário de fragmentos substituintes disponíveis.
-    repeticoes : int
-        Quantidade de variantes por anel.
-    posicoes_disponiveis : list[int] | None
-        Posições do SMILES onde auxocromos podem ser inseridos.
-        Padrão: [2, 3, 4, 5, 6].
-    quantidade_auxocromos : int
-        Quantos auxocromos inserir por variante.
-
-    Retorna
-    -------
-    dict[int, str]
-        Dicionário {id_sequencial: smiles_gerado}.
+    Retorna um DataFrame com:
+    - id do fragmento gerado;
+    - ID do anel;
+    - SMILES base;
+    - auxocromos usados;
+    - posições usadas;
+    - SMILES modificado.
     """
     if posicoes_disponiveis is None:
         posicoes_disponiveis = [2, 3, 4, 5, 6]
 
-    resultado: dict[int, str] = {}
+    dados = []
     contador = 1
 
-    for smiles_base in aneis.values():
+    for id_anel, smiles_base in aneis.items():
         for _ in range(repeticoes):
-            smiles_gerado = _adicionar_auxocromos(
-                smiles_base, auxocromos, posicoes_disponiveis, quantidade_auxocromos
+            smiles_mod, posicoes_usadas, frags_usados, chaves_usadas = gerar_smiles_modificado(
+                smiles_base=smiles_base,
+                frags_dict=auxocromos,
+                posicoes_possiveis=posicoes_disponiveis,
+                n_fragmentos=quantidade_auxocromos,
             )
-            resultado[contador] = smiles_gerado
+
+            linha = {
+                "id": contador,
+                "ID_Anel": id_anel,
+                "SMILES_Base": smiles_base,
+                "SMILES_Modificado": smiles_mod,
+            }
+
+            for i in range(len(posicoes_usadas)):
+                linha[f"ID_Frag_{i + 1}"] = chaves_usadas[i]
+                linha[f"Frag_Estrutura_{i + 1}"] = frags_usados[i]
+                linha[f"Posicao_{i + 1}"] = posicoes_usadas[i]
+
+            dados.append(linha)
             contador += 1
 
-    return resultado
+    return pd.DataFrame(dados)
