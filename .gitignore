@@ -31,7 +31,6 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-*.ipynb
 
 # Installer logs
 pip-log.txt
@@ -72,8 +71,7 @@ docs/_build/
 # PyBuilder
 target/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+
 
 # IPython
 profile_default/
