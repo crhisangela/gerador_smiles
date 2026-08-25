@@ -1,0 +1,78 @@
+% ------------------------------------------------------------------------
+% Preâmbulo: pacotes e configurações gerais do documento
+% ------------------------------------------------------------------------
+
+% ---
+% Pacotes fundamentais
+% ---
+\usepackage{lmodern}			% Fonte Latin Modern
+\usepackage[T1]{fontenc}		% Codificação de fonte
+\usepackage[utf8]{inputenc}	% Codificação do arquivo fonte
+\usepackage{lastpage}			% Número da última página
+\usepackage{indentfirst}		% Indenta o primeiro parágrafo de cada seção
+\usepackage{nomencl}			% Lista de abreviaturas e siglas
+\usepackage{color}				% Suporte a cores
+\usepackage{graphicx}			% Inclusão de figuras
+\usepackage{microtype}			% Melhorias de justificação/hifenização
+\usepackage{csquotes}			% Citações em bloco
+
+% ---
+% Pacotes de citação e referências (ABNT NBR 10520 e NBR 6023)
+% ---
+\usepackage[
+	alf,				% estilo de citação autor-data (alfabético)
+	abnt-etal-list=3,
+	abnt-emphasize=bf	% negrito em vez de itálico para os títulos
+	]{abntex2cite}
+
+% ---
+% Pacotes matemáticos e de tabelas (comuns em trabalhos de Ciência da Computação)
+% ---
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% ---
+% Hyperlinks: a classe abntex2 já carrega o pacote hyperref internamente
+% (\RequirePackage{hyperref} em abntex2.cls), então aqui apenas ajustamos
+% suas opções via \hypersetup, sem recarregar o pacote.
+% ---
+\usepackage[all]{hypcap}		% corrige links para figuras/tabelas
+
+\hypersetup{
+	pdftitle={\@title},
+	pdfauthor={\@author},
+	pdfcreator={LaTeX with abnTeX2},
+	pdfkeywords={geração de moléculas}{SMILES}{recombinação}{ciência da computação},
+	colorlinks=true,
+	linkcolor=black,
+	citecolor=black,
+	filecolor=black,
+	urlcolor=black,
+	bookmarksdepth=4,
+	pdfstartview=FitH
+}
+
+% ---
+% Espaçamentos entre linhas e parágrafos (NBR 14724)
+% ---
+\SingleSpacing % espaçamento simples será sobrescrito por \OnehalfSpacing no textual
+\setlength{\parindent}{1.3cm}
+\setlength{\parskip}{0.2cm}
+
+% ---
+% Configuração dos títulos de capítulos e seções
+% ---
+\renewcommand{\ABNTEXchapterfontsize}{\Large}
+\renewcommand{\ABNTEXsectionfontsize}{\large}
+\renewcommand{\ABNTEXsubsectionfontsize}{\normalsize}
+
+% ---
+% Numeração de páginas no canto superior direito (padrão abntex2)
+% ---
+\makeatletter
+\let\hrulefillorig\hrulefill
+\makeatother
