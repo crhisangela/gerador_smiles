@@ -17,11 +17,12 @@
 \usepackage{csquotes}			% Citações em bloco
 
 % ---
-% Pacotes de citação e referências (ABNT NBR 10520 e NBR 6023)
+% Pacotes de citação e referências (ABNT NBR 10520:2023 e NBR 6023:2018)
 % ---
 \usepackage[
 	alf,				% estilo de citação autor-data (alfabético)
-	abnt-etal-list=3,
+	abnt-etal-cite=3,	% NBR 10520:2023: mais de 3 autores -> et al. na citação
+	abnt-etal-list=3,	% NBR 6023:2018: mais de 3 autores -> et al. na lista
 	abnt-emphasize=bf	% negrito em vez de itálico para os títulos
 	]{abntex2cite}
 

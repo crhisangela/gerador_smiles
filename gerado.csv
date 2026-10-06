@@ -1,0 +1,3 @@
+,SMILES_Aromatico_Candidato
+0,CC1C(=O)C(OC2:C:C(=C(C#N)C#N):C([SH](=O)=O):N:N:2N=O)NC1[N+](=O)O
+1,CC(=O)NC1[SH](N=CC2:C:O:C(O):C(Cl):N:2[SH](=O)=O)CC([SH](=O)=O)[SH]1C(F)(F)F

@@ -67,9 +67,13 @@
 \textual
 
 \include{elementos/introducao}
-\include{elementos/revisao-literatura}
-\include{elementos/justificativa-metodologica}
-\include{elementos/objetivos}
+% Capítulos 2 a 4 seguem direto, sem quebra de página entre eles
+{\let\clearpage\relax \let\cleardoublepage\relax
+\input{elementos/revisao-literatura}
+\input{elementos/justificativa-metodologica}
+\input{elementos/objetivos}
+}
+\clearpage
 \include{elementos/metodologia}
 \include{elementos/resultados-preliminares}
 \include{elementos/cronograma}

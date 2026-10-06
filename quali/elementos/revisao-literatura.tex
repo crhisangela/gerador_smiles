@@ -4,29 +4,91 @@
 \section{Fundamentos}
 \label{sec:fundamentos}
 
-% Tópicos sugeridos:
-%   - representação SMILES (sintaxe, validação, canonização)
-%   - noções de espectroscopia / propriedades ópticas de interesse
-%   - TD-DFT e estados excitados (o que é, por que é usado para prever
-%     propriedades fotoativas)
-%   - representação de moléculas como grafos/árvores
+\subsection{Espectroscopia UV-Vis}
+\label{sec:uvvis}
+
+A espectroscopia é o estudo da interação entre a radiação eletromagnética e a matéria. A espectroscopia de absorção UV-Vis baseia-se na capacidade de certas moléculas absorverem radiação nas regiões ultravioleta e visível, em uma faixa aproximadamente entre 190 e 800~nm, cujos limites variam com o instrumento e a aplicação \cite{rocha_2018,sanchez_rojas_2009}.
+
+A absorção ocorre quando a energia da radiação incidente é suficiente para promover uma transição eletrônica entre estados de diferentes energias. Em uma descrição por orbitais moleculares, uma dessas transições pode ser associada à promoção de um elétron do orbital molecular ocupado de maior energia (HOMO) para o orbital desocupado de menor energia (LUMO) \cite{pavia_2015,atkins_depaula_2018}. A relação entre a diferença de energia e o comprimento de onda absorvido é
+\begin{equation}
+	E = \frac{hc}{\lambda},
+\end{equation}
+em que $E$ é a energia da radiação, $h$ a constante de Planck, $c$ a velocidade da luz e $\lambda$ o comprimento de onda. Menores diferenças de energia entre os estados eletrônicos correspondem, portanto, a maiores comprimentos de onda de absorção. Os grupos responsáveis pela absorção são denominados cromóforos \cite{pavia_2015,skoog_2017}.
+
+\subsection{Relação entre estrutura molecular e absorção UV-Vis}
+\label{sec:estrutura-absorcao}
+
+A estrutura molecular influencia a absorção ao modificar a distribuição eletrônica e as energias das transições. Entre as características relevantes estão a extensão da conjugação, a presença de grupos auxocrômicos e a existência de sistemas aromáticos.
+
+Sistemas conjugados são formados por ligações simples e duplas alternadas que deslocalizam os elétrons $\pi$; o aumento da conjugação reduz a diferença de energia entre os estados envolvidos e desloca o máximo de absorção para maiores comprimentos de onda \cite{pavia_2015,skoog_2017}. Os auxocromos, quando ligados a um cromóforo, podem alterar a intensidade e a posição das bandas, devido aos pares de elétrons livres que interagem com o sistema eletrônico. Anéis aromáticos, em especial os fusionados, podem absorver em maiores comprimentos de onda pela maior deslocalização, embora a geometria (por exemplo, a planaridade) também influencie a sobreposição dos orbitais.
+
+Dessa forma, a conectividade molecular fornece informação relevante, mas não descreve isoladamente o comportamento espectroscópico, que depende também de fatores eletrônicos e geométricos. Neste trabalho, indicadores estruturais, como a extensão do sistema conjugado, são tratados como aproximações para a triagem de candidatos, e não como substitutos de um cálculo ou de uma medida espectroscópica.
+
+\subsection{Representações computacionais de moléculas}
+\label{sec:representacoes}
+
+Moléculas podem ser representadas computacionalmente de várias formas, conforme o objetivo. No grafo molecular, átomos são nós e ligações são arestas, o que expressa explicitamente a conectividade. O SMILES descreve a estrutura por uma sequência de caracteres \cite{weininger_1988}; apesar de compacto, depende da ordem de percurso da molécula, de modo que uma mesma molécula admite diferentes SMILES e as relações hierárquicas entre subestruturas não ficam explícitas.
+
+Representações hierárquicas organizam a molécula em unidades de maior nível, como fragmentos, e, entre elas, as baseadas em árvores dispõem os componentes segundo a decomposição adotada. Como a molécula é originalmente um grafo, construir uma árvore exige definir quais elementos são preservados e como se relacionam; trata-se de uma abstração adequada à tarefa de comparação ou geração, e não de uma substituição do grafo molecular.
+
+\subsection{Tree Edit Distance}
+\label{sec:ted}
+
+A \textit{Tree Edit Distance} (TED) quantifica a diferença entre duas árvores pelo custo mínimo de uma sequência de operações de edição (inserção, remoção e substituição de nós) que transforma uma na outra. Aplicada a representações hierárquicas de moléculas, ela mede diferenças entre as organizações estruturais: moléculas que compartilham subestruturas tendem a ter menor distância, a depender da representação e dos custos adotados. A TED é uma medida de distância entre representações estruturais, e não uma medida direta de similaridade espectroscópica.
+
+\citeonline{zhang_shasha_1989} propuseram um algoritmo de programação dinâmica para a distância de edição entre árvores ordenadas, que decompõe o problema em subproblemas menores. Neste trabalho o algoritmo é usado para calcular a TED entre as árvores dos anéis, normalizada pelo tamanho da maior árvore, e a distância obtida é o critério estrutural para selecionar o anel parceiro na recombinação.
 
 \section{Estado da arte em geração molecular}
 \label{sec:estado-da-arte}
 
-% Tópicos sugeridos:
-%   - algoritmos genéticos (GA) aplicados à geração/otimização molecular
-%   - abordagens baseadas em grafos (GA-grafo, edição de grafos)
+O JT-VAE \cite{jin_2018} usa uma árvore de subestruturas químicas associada ao grafo molecular, separando a organização dos componentes da conectividade detalhada. \citeonline{ishitani_2022} propuseram uma representação em árvore reversível (\textit{Reversible Junction Trees}) associada a aprendizado por reforço para otimização molecular, e \citeonline{yamada_2023} exploraram a decomposição e a recombinação de moléculas por estruturas hierárquicas e mecanismos de otimização. Essas abordagens mostram que subestruturas químicas funcionam como unidades de representação e modificação. Contudo, a representação hierárquica não define, por si só, como duas moléculas devem ser comparadas, e é aí que a TED se apresenta como critério explícito \cite{genheden_2021}.
+
+\citeonline{cooking_2025} é a principal influência conceitual deste trabalho. Embora tratem de receitas culinárias e de modelos de linguagem, os autores convertem cada receita em uma árvore (ingredientes como folhas e ações como nós internos) e aplicam o algoritmo de Zhang--Shasha para transformar a árvore de uma receita na de outra; as árvores intermediárias do caminho de edição são tomadas como novas receitas, que combinam elementos estruturais das duas origens. Os resultados indicam que essa recombinação estruturada produz saídas mais diversas e mais novas do que a geração direta por LLM, com valor comparável. A adaptação proposta aqui difere da deles em pontos importantes. Aqui a árvore representa anéis, posições e fragmentos; o valor da TED é usado apenas para escolher o par de anéis a recombinar, e a molécula é obtida por junção química dos dois anéis por uma ponte, e não pelas árvores intermediárias do caminho de edição. A viabilidade química, que na origem é avaliada com o FlavorDB, é aqui uma restrição garantida por regras de valência e sanitização. Usar as árvores intermediárias como moléculas candidatas exigiria garantir a validade química de cada estado intermediário, e fica como possibilidade futura. Trata-se, portanto, de uma adaptação parcial da ideia, e não de uma transposição direta.
+
+Fora das representações em árvore, \citeonline{kwon_2021} combinaram algoritmo genético, um decodificador RNN (LSTM) de SMILES e uma rede neural como substituta de cálculos TD-DFT, usada como função de aptidão de baixo custo e com re-treino iterativo para extrapolar além da distribuição de treino. \citeonline{worakul_2025} geraram materiais de fissão de singleto por aprendizado por reforço com preditor GNN (Chemprop) sobre uma base orientada a fragmentos. Para propriedades optoeletrônicas, há ainda fluxos de projeto inverso que alternam geração molecular, modelos substitutos e cálculos quânticos \cite{inverse_design_2023}. Em comum, essas abordagens dependem de modelos treinados e fornecem pouco controle explícito sobre a origem estrutural de cada candidato.
+
+% Tópicos sugeridos (completar):
+%   - algoritmos genéticos (GA) e abordagens baseadas em grafos
 %   - modelos de linguagem sobre SMILES (RNN, transformers)
-%   - autoencoders variacionais (VAE) para geração molecular
 %   - busca em árvore / MCTS aplicada à construção molecular
-%   - métricas de similaridade/diversidade estrutural (Tanimoto,
-%     fingerprints, distância de edição de grafos/árvores, Zhang-Shasha)
+%   - métricas de similaridade/diversidade (Tanimoto, fingerprints)
 
 \section{Síntese e lacunas}
 \label{sec:sintese-lacunas}
 
-% Tópicos sugeridos:
-%   - quadro comparativo dos trabalhos discutidos
-%     (abordagem x controle de geração x interpretabilidade x custo)
-%   - lacuna que este trabalho pretende preencher
+A Tabela~\ref{tab:comparativo} resume os trabalhos discutidos quanto à representação molecular, ao mecanismo de geração e ao critério que orienta a busca.
+
+\begin{table}[htb]
+	\centering
+	\caption{Comparação entre abordagens de geração molecular discutidas.}
+	\label{tab:comparativo}
+	\footnotesize
+	\begin{tabular}{p{3.2cm}p{3.4cm}p{3.6cm}p{4.2cm}}
+		\hline
+		\textbf{Trabalho} & \textbf{Representação} & \textbf{Geração} & \textbf{Critério de orientação} \\
+		\hline
+		\citeonline{cooking_2025} & Árvore de receita (ingredientes e ações) & Árvores intermediárias do caminho de edição de Zhang--Shasha entre duas receitas & Valor (compatibilidade) e novidade (inspirada em TF-IDF) \\
+		\citeonline{jin_2018} & Árvore de junção + grafo & VAE, espaço latente & Otimização no espaço latente \\
+		\citeonline{ishitani_2022} & Árvore de junção reversível & Aprendizado por reforço & Função de recompensa \\
+		\citeonline{yamada_2023} & Subgrafos recorrentes & Decomposição e recombinação com RL & Função de recompensa \\
+		\citeonline{kwon_2021} & ECFP e SMILES & Algoritmo genético + RNN & Preditor substituto de TD-DFT \\
+		\citeonline{worakul_2025} & Fragmentos & RL com preditor GNN & Propriedade-alvo prevista \\
+		\citeonline{jensen_2019} & Grafo molecular & Algoritmo genético com \textit{crossover} de fragmentos & Função de aptidão \\
+		\citeonline{krenn_2020} & SELFIES (cadeia) & Qualquer método sobre a cadeia & Validade por construção \\
+		\textbf{Este trabalho} & Árvore por anel (anel $\rightarrow$ posição $\rightarrow$ fragmento) & Recombinação anel--ponte--anel & TED (Zhang--Shasha) entre anéis, mais indicador de conjugação \\
+		\hline
+	\end{tabular}
+	\fonte{Elaborado pela autora.}
+\end{table}
+
+Entre os métodos sem treinamento, \citeonline{jensen_2019} propuseram um algoritmo genético sobre grafos moleculares, com \textit{crossover} que troca fragmentos entre moléculas-pai, e o SELFIES \cite{krenn_2020} é uma representação em cadeia na qual toda sequência corresponde a uma molécula válida. Ambos disputam o mesmo nicho que este trabalho: explorar o espaço químico sem depender de modelos treinados.
+
+Observa-se que os métodos baseados em aprendizado dependem de treinamento, de funções de recompensa ou de preditores substitutos, e usam as árvores principalmente como representação, e não como critério de comparação entre moléculas. A distância de edição de árvores, por sua vez, já foi aplicada a estruturas químicas em tarefas de agrupamento de rotas sintéticas \cite{genheden_2021}, e a recombinação estruturada guiada por Zhang--Shasha foi demonstrada em receitas culinárias \cite{cooking_2025}, mas não, até onde se pôde verificar nesta revisão, para selecionar parceiros em uma recombinação de fragmentos moleculares.
+
+Disso decorrem as lacunas que este trabalho busca tratar, as mesmas retomadas na Introdução:
+\begin{enumerate}
+	\item os métodos sem treinamento, baseados em recombinação direta de estruturas \cite{jensen_2019} ou em representações válidas por construção \cite{krenn_2020}, não usam, até onde se pôde verificar, uma distância explícita entre árvores para escolher os pares a recombinar;
+	\item a diversidade estrutural do conjunto gerado costuma ser avaliada \textit{a posteriori}, e não usada para guiar a geração;
+	\item com um critério explícito de seleção, cada candidato pode ser rastreado até os anéis e fragmentos de origem, o que é pouco explorado nos métodos treinados.
+\end{enumerate}
+Esses métodos são os concorrentes diretos da proposta. Neste trabalho, o algoritmo genético de \citeonline{jensen_2019} é o referencial natural de comparação, e a seleção aleatória de parceiros é o baseline mínimo (Capítulo~\ref{cap:objetivos}).

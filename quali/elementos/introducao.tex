@@ -4,22 +4,25 @@
 \section{Contextualização e motivação}
 \label{sec:contextualizacao}
 
-% Tópicos sugeridos:
-%   - por que moléculas fotoativas/funcionais importam na prática
-%     (ex.: OLEDs, células solares, singlet fission, corantes/fluoróforos)
-%   - lacuna entre desenho racional de moléculas e exploração computacional
-%     do espaço químico
-%   - papel do SMILES como representação computacional de moléculas
+Moléculas que absorvem radiação ultravioleta (UV) e visível (Vis) são importantes em diversos setores: no monitoramento de contaminantes e de processos de fotodegradação em água e na quantificação de fármacos \cite{rocha_2018}, e em células solares orgânicas e OLEDs \cite{ostroverkhova_2016}. A capacidade de uma molécula de absorver radiação em determinadas regiões do espectro está relacionada à sua estrutura molecular e às características eletrônicas dela decorrentes \cite{atkins_depaula_2018,silverstein_2006}. Identificar e desenvolver moléculas com propriedades ópticas específicas é, portanto, um problema de interesse em Química e em Ciência de Materiais.
+
+Encontrar novos compostos com propriedades de interesse é difícil devido à extensão do espaço químico: \citeonline{polishchuk_2013} estimaram em cerca de $10^{33}$ as estruturas compatíveis com moléculas \textit{drug-like}, e \citeonline{bohacek_1996} em ordem de $10^{60}$ as moléculas orgânicas pequenas, valores que dependem do critério de contagem adotado. Esses números descrevem o espaço químico geral, e não o espaço de busca deste trabalho, que é restrito a um catálogo finito de fragmentos (Seção~\ref{sec:problema}). Eles motivam, porém, estratégias computacionais que restrinjam a busca a regiões associadas a propriedades específicas \cite{tkatchenko_2020}. Na própria espectroscopia UV-Vis, métodos de aprendizado de máquina já são usados para prever características de espectros a partir da estrutura \cite{mamede_2021}.
+
+Diferentes abordagens têm sido empregadas na geração e na otimização de moléculas, entre elas autoencoders variacionais \cite{gomez_bombarelli_2018,jin_2018}, redes adversárias generativas \cite{guimaraes_2017,decao_kipf_2018}, aprendizado por reforço \cite{olivecrona_2017,you_2018} e arquiteturas híbridas que combinam algoritmos genéticos, redes recorrentes e modelos substitutos de cálculos quânticos \cite{kwon_2021}. Os métodos baseados em redes neurais costumam depender de bases de dados para treinamento e de modelos de propriedades, e a origem estrutural de cada molécula gerada nem sempre é explícita. Além disso, o resultado depende da representação molecular adotada (\textit{strings}, \textit{fingerprints} ou grafos), pois ela determina quais modificações estruturais são possíveis, se a validade química é preservada e como a similaridade entre moléculas é medida.
+
+Representações lineares, como o SMILES, descrevem estruturas de forma compacta e são amplamente usadas em modelos generativos \cite{weininger_1988,gomez_bombarelli_2018}, mas a representação sequencial não explicita as relações hierárquicas entre subestruturas, e moléculas relacionadas podem ter representações distintas \cite{jin_2018}. Como alternativa, trabalhos recentes adotam representações hierárquicas baseadas em subestruturas. O \textit{Junction Tree Variational Autoencoder} (JT-VAE) usa uma árvore de subestruturas para gerar moléculas válidas \cite{jin_2018}, e abordagens posteriores combinaram árvores com aprendizado por reforço e com decomposição e recombinação molecular \cite{ishitani_2022,yamada_2023}.
+
+Em paralelo, métodos sem treinamento exploram o espaço por recombinação direta de estruturas, como os algoritmos genéticos sobre grafos moleculares com \textit{crossover} de fragmentos \cite{jensen_2019}, e há representações que garantem validade por construção, como o SELFIES \cite{krenn_2020}. Até onde se pôde verificar nesta revisão, porém, nesses métodos a escolha dos pares a recombinar não é feita por uma medida explícita de distância entre as organizações hierárquicas das moléculas, que permitiria controlar o quão distantes entre si são as estruturas combinadas.
+
+A \textit{Tree Edit Distance} (TED) quantifica a diferença entre duas árvores pelo custo mínimo de operações de edição sobre nós. Sua versão para árvores ordenadas tem algoritmo polinomial \cite{zhang_shasha_1989,bille_2005}, enquanto a versão para árvores não ordenadas é NP-difícil \cite{zhang_statman_shasha_1992}; a distância de edição entre grafos gerais também é NP-difícil, o que a torna menos adequada à comparação repetida de muitos pares. A TED já foi aplicada a estruturas químicas, no agrupamento de rotas sintéticas \cite{genheden_2021}. Em outro domínio, \citeonline{cooking_2025} representam receitas culinárias como árvores e usam o algoritmo de Zhang--Shasha para recombiná-las, obtendo saídas mais diversas e mais novas do que a geração direta por modelos de linguagem. Essa evidência motiva o uso da TED neste trabalho, cuja aplicação, como discutido na Seção~\ref{sec:sintese-lacunas}, difere da deles.
 
 \section{Definição do problema}
 \label{sec:problema}
 
-% Tópicos sugeridos:
-%   - o que exatamente se quer gerar/otimizar (classe de moléculas-alvo)
-%   - por que geração combinatória de fragmentos é o ponto de partida
-%   - como diversidade/redundância estrutural entra como problema em aberto
+\paragraph{Problema.} Dado um catálogo finito de fragmentos (anéis, substituintes e pontes conjugadas) e a restrição de que cada molécula gerada seja quimicamente válida, como explorar o espaço de moléculas \textit{anel--ponte--anel} de modo a obter um conjunto de candidatos novos, estruturalmente diversos e com indicadores favoráveis à absorção UV-Vis?
 
-\section{Organização do texto}
-\label{sec:organizacao}
+\paragraph{Dimensão do espaço de busca.} O catálogo atual tem 2152 anéis únicos, formados a partir de 48 esqueletos e 26 substituintes, e 20 pontes, o que dá cerca de $2152 \times 2151 \times 20 \approx 9{,}3 \times 10^{7}$ combinações ordenadas, antes de contar as escolhas de átomo de encaixe. Esse espaço é enumerável, mas cresce rapidamente com o número de substituintes por anel e com o tamanho do catálogo, e cada candidato exige junção, sanitização e avaliação. Interessa, portanto, uma estratégia de seleção que favoreça a diversidade da amostra gerada, em vez de depender de enumeração ou de sorteio uniforme.
 
-% TODO: um parágrafo curto remetendo a cada capítulo, escrito por último.
+\paragraph{Proposta de solução.} Propõe-se representar cada anel e seus substituintes como uma árvore ordenada de forma uniforme (anel $\rightarrow$ posição $\rightarrow$ fragmento) e usar a TED de Zhang--Shasha para escolher o anel parceiro de cada anel-semente, priorizando parceiros estruturalmente distantes. A validade química não é atribuída à TED: é uma restrição garantida por junção com verificação de valência, sanitização e aromatização, e a taxa de novas tentativas é tratada como medida de custo. Um indicador de conjugação pode, adicionalmente, orientar a escolha das pontes nas gerações seguintes.
+
+\paragraph{Objetivo e contribuições esperadas.} O objetivo é investigar se a seleção de parceiros por TED aumenta a diversidade estrutural dos candidatos em relação a uma seleção aleatória, mantendo-os válidos e novos. As contribuições esperadas são: (i) um procedimento de recombinação de fragmentos orientado por distância entre árvores, com origem rastreável de cada molécula; (ii) uma comparação com baseline e uma ablação dos dois mecanismos de orientação; e (iii) uma triagem dos candidatos por conjugação, tratada como indicador aproximado, e não como previsão espectroscópica. Hipótese, definições operacionais e objetivos específicos estão no Capítulo~\ref{cap:objetivos}.
