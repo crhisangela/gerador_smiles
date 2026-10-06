@@ -81,14 +81,14 @@ A Tabela~\ref{tab:comparativo} resume os trabalhos discutidos quanto à represen
 	\fonte{Elaborado pela autora.}
 \end{table}
 
-Entre os métodos sem treinamento, \citeonline{jensen_2019} propuseram um algoritmo genético sobre grafos moleculares, com \textit{crossover} que troca fragmentos entre moléculas-pai, e o SELFIES \cite{krenn_2020} é uma representação em cadeia na qual toda sequência corresponde a uma molécula válida. Ambos disputam o mesmo nicho que este trabalho: explorar o espaço químico sem depender de modelos treinados.
+Entre os métodos sem treinamento, \citeonline{jensen_2019} propôs um algoritmo genético sobre grafos moleculares, com \textit{crossover} que troca fragmentos entre moléculas-pai, e o SELFIES \cite{krenn_2020} é uma representação em cadeia na qual toda sequência corresponde a uma molécula válida. Ambos disputam o mesmo nicho que este trabalho: explorar o espaço químico sem depender de modelos treinados.
 
 Observa-se que os métodos baseados em aprendizado dependem de treinamento, de funções de recompensa ou de preditores substitutos, e usam as árvores principalmente como representação, e não como critério de comparação entre moléculas. A distância de edição de árvores, por sua vez, já foi aplicada a estruturas químicas em tarefas de agrupamento de rotas sintéticas \cite{genheden_2021}, e a recombinação estruturada guiada por Zhang--Shasha foi demonstrada em receitas culinárias \cite{cooking_2025}, mas não, até onde se pôde verificar nesta revisão, para selecionar parceiros em uma recombinação de fragmentos moleculares.
 
 Disso decorrem as lacunas que este trabalho busca tratar, as mesmas retomadas na Introdução:
 \begin{enumerate}
 	\item os métodos sem treinamento, baseados em recombinação direta de estruturas \cite{jensen_2019} ou em representações válidas por construção \cite{krenn_2020}, não usam, até onde se pôde verificar, uma distância explícita entre árvores para escolher os pares a recombinar;
-	\item a diversidade estrutural do conjunto gerado costuma ser avaliada \textit{a posteriori}, e não usada para guiar a geração;
-	\item com um critério explícito de seleção, cada candidato pode ser rastreado até os anéis e fragmentos de origem, o que é pouco explorado nos métodos treinados.
+	\item a diversidade já é usada para guiar a geração em aprendizado por reforço, por meio de memória e filtros de diversidade \cite{blaschke_2020}, mas medida por similaridade de 	extit{fingerprints}, e não por uma distância entre organizações hierárquicas das moléculas;
+	\item um critério explícito de seleção torna cada candidato rastreável até os anéis e fragmentos de origem, o que o distingue dos métodos treinados, mas não do algoritmo genético de \citeonline{jensen_2019}, que também é rastreável; frente a ele, a diferença está no critério de seleção dos pares.
 \end{enumerate}
 Esses métodos são os concorrentes diretos da proposta. Neste trabalho, o algoritmo genético de \citeonline{jensen_2019} é o referencial natural de comparação, e a seleção aleatória de parceiros é o baseline mínimo (Capítulo~\ref{cap:objetivos}).

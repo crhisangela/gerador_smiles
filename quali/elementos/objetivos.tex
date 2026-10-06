@@ -1,25 +1,10 @@
 \chapter{Objetivos}
 \label{cap:objetivos}
 
-\section{Hipótese}
-\label{sec:hipotese}
-
-A hipótese central é que, na recombinação de fragmentos \textit{anel--ponte--anel}, escolher como parceiro de cada anel-semente o anel de maior \textit{Tree Edit Distance} (TED) aumenta a diversidade estrutural dos candidatos em relação à escolha aleatória de parceiros. Ela se desdobra em três hipóteses testáveis, cada uma com o resultado que a refutaria.
-
-\begin{description}
-	\item[H1 (efeito da TED).] Com o mesmo catálogo, as mesmas sementes, o mesmo número de candidatos e a mesma guia de pontes, a seleção por TED máxima produz maior diversidade interna do conjunto gerado do que a seleção aleatória de parceiros. \emph{Refutação:} diferença não significativa, ou favorável ao sorteio, em repetições com sementes aleatórias distintas.
-	\item[H2 (a distância entre anéis reflete a da molécula).] A TED entre os anéis de um par se correlaciona positivamente com a distância estrutural entre a molécula gerada e as moléculas já obtidas (por exemplo, a distância de Tanimoto sobre ECFP4 ao vizinho mais próximo). \emph{Refutação:} correlação nula ou negativa, o que indicaria que a distância entre anéis não é um bom critério para a diversidade da molécula final.
-	\item[H3 (efeito da guia de conjugação).] A guia por indicador de conjugação aumenta o valor médio do indicador nos candidatos, sem eliminar o ganho de diversidade de H1. \emph{Refutação:} ausência de aumento do indicador, ou perda da diversidade; a ablação com e sem a guia, cruzada com TED e sorteio, separa o efeito de cada mecanismo.
-\end{description}
-
-\paragraph{Definições operacionais.} \emph{Válida} é a molécula que passa na sanitização do RDKit com valência correta; a validade é uma restrição garantida pelo pipeline de junção, e não efeito da TED, e a taxa de novas tentativas por candidato é medida como custo. \emph{Nova} é a molécula cujo SMILES canônico não consta da base de origem do catálogo, podendo-se estender a comparação a bancos públicos (por exemplo, PubChem). \emph{Diversa} é medida pela diversidade interna do conjunto (média de $1-$ similaridade de Tanimoto sobre ECFP4 entre pares) e pelo número de esqueletos de Bemis--Murcko distintos.
-
-\paragraph{Escopo da avaliação espectroscópica.} O indicador de conjugação (fração dos átomos pesados no maior sistema conjugado) é uma triagem estrutural e não prevê o comprimento de onda de absorção, que também depende de efeitos doador--aceitador, planaridade e substituintes. Os resultados serão, portanto, descritos como candidatos com indicadores favoráveis à absorção UV-Vis, e não como moléculas de absorção comprovada, a menos que haja validação espectroscópica de um subconjunto (Seção~\ref{sec:objetivos-especificos}).
-
 \section{Objetivo geral}
 \label{sec:objetivo-geral}
 
-Investigar se o uso da \textit{Tree Edit Distance}, calculada pelo algoritmo de Zhang--Shasha, como critério de seleção de parceiros na recombinação de fragmentos aumenta a diversidade estrutural de moléculas candidatas com indicadores favoráveis à absorção UV-Vis, em comparação com a seleção aleatória.
+Avaliar, por experimentos com baseline, controle de tamanho e ablação, se a seleção de parceiros por \textit{Tree Edit Distance} (Zhang--Shasha) aumenta a diversidade estrutural de moléculas candidatas geradas por recombinação de fragmentos, e verificar se o indicador de conjugação usado como triagem se relaciona com a absorção UV-Vis calculada para um subconjunto.
 
 \section{Objetivos específicos}
 \label{sec:objetivos-especificos}
@@ -27,16 +12,16 @@ Investigar se o uso da \textit{Tree Edit Distance}, calculada pelo algoritmo de 
 \begin{enumerate}
 	\item Construir um catálogo de fragmentos (anéis, substituintes e pontes) e um procedimento de recombinação na forma \textit{anel--ponte--anel};
 	\item Desenvolver uma representação em árvore de forma uniforme e com ordenação canônica para os anéis e seus substituintes, de modo que a distância não dependa da numeração arbitrária das posições;
-	\item Implementar a TED entre essas árvores pelo algoritmo de Zhang--Shasha e usá-la para selecionar o parceiro de cada anel-semente;
+	\item Implementar a TED entre essas árvores pelo algoritmo de Zhang--Shasha e a regra de seleção de parceiros por maior distância sobre uma amostra;
 	\item Garantir a validade química dos candidatos por junção com verificação de valência, sanitização e aromatização, com novas tentativas e deduplicação, e medir o custo dessas tentativas;
-	\item Comparar a seleção por TED com a seleção aleatória (H1) e com a guia de conjugação ativada ou não (H3), segundo as métricas de novidade e de diversidade definidas;
-	\item Verificar se a TED entre os anéis de um par se relaciona com a distância da molécula gerada (H2);
-	\item Calcular o indicador de conjugação dos candidatos e, em um subconjunto, validar a absorção por um método de maior nível (método a definir, por exemplo semiempírico ou TD-DFT), verificando se o indicador é adequado como triagem.
+	\item Executar os braços A a E, com e sem guia de conjugação, segundo o plano estatístico, e avaliar o efeito da seleção por TED e o da guia de conjugação na diversidade;
+	\item Verificar se a TED do par de anéis se relaciona com a distância da molécula gerada;
+	\item Calcular o indicador de conjugação dos candidatos e validá-lo em um subconjunto por xTB/sTDA, com calibração por TD-DFT.
 \end{enumerate}
 
 \section{Relevância da pesquisa}
 \label{sec:relevancia}
 
-A relevância desta pesquisa está em testar, com baseline e ablação, se uma distância explícita entre árvores é um critério útil para escolher o que recombinar na geração de moléculas. Ao contrário de modelos generativos treinados, a recombinação por fragmentos permite rastrear cada molécula gerada até os anéis, as pontes e os substituintes de origem, e relacionar a distância entre as estruturas de origem à da molécula resultante.
+A relevância desta pesquisa está em testar, com baseline, controle de tamanho, um concorrente sem árvore e um limite superior de diversidade, se uma distância explícita entre árvores é um critério útil para escolher o que recombinar na geração de moléculas. Ao contrário de modelos generativos treinados, a recombinação por fragmentos permite rastrear cada molécula gerada até os anéis, as pontes e os substituintes de origem.
 
-Além disso, ao separar a restrição de validade do efeito da seleção e do efeito da guia espectroscópica, o trabalho permite identificar o que cada mecanismo contribui, o que é pouco explicitado em métodos que combinam vários componentes. A contribuição está em oferecer evidência, positiva ou negativa, sobre o uso da TED na exploração computacional de um espaço químico restrito, voltada a candidatos com propriedades favoráveis à absorção UV-Vis.
+A contribuição esperada é a evidência, positiva ou negativa, sobre o uso da TED na exploração de um espaço químico restrito, com a separação entre o efeito da seleção, o da guia espectroscópica e o do pipeline de validade, e uma estimativa de quanto um indicador estrutural simples se relaciona com a absorção calculada.

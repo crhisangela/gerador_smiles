@@ -42,3 +42,64 @@
 
 % Tópicos sugeridos:
 %   - linguagem, bibliotecas (RDKit, pandas etc.), versões
+
+\section{Delineamento experimental}
+\label{sec:delineamento}
+
+Os valores numéricos de tamanho de amostra, número de repetições e tolerâncias abaixo são propostas iniciais, a serem ajustadas após um estudo piloto. O tamanho do catálogo (hoje, 2152 anéis e 20 pontes) também é provisório, e todos os números derivados dele (número de combinações, custos, distribuição da TED) são medidas do catálogo atual, a refazer quando o catálogo final for definido.
+
+\subsection{Regra de seleção de parceiros}
+
+Para cada anel-semente, sorteiam-se $n_s=10$ anéis do catálogo (sem reposição), calcula-se a TED normalizada entre a árvore do anel-semente e a de cada um e escolhe-se o de maior distância, com empates desfeitos ao acaso (argmax sobre a amostra). Por operar sobre uma amostra aleatória, e não sobre o catálogo inteiro, a regra limita a concentração de parceiros em poucos anéis periféricos (\textit{hubness}), que ocorreria em um argmax global; a frequência de uso de cada anel como parceiro é registrada para verificar isso.
+
+\subsection{Observação preliminar sobre a TED nas árvores atuais}
+
+Com um substituinte por anel ($k=1$), toda árvore tem 3 nós (anel, posição, fragmento) e, com custo unitário, a TED normalizada só assume os valores $0$, $1/3$, $2/3$ e $1$. Em $20\,000$ pares sorteados do catálogo provisório atual (2152 anéis), $60\%$ tiveram distância $1$, $37{,}5\%$ distância $2/3$ e $2{,}2\%$ distância $1/3$. Nessas condições, o ``maior TED'' discrimina pouco entre os parceiros e equivale, na prática, a contar quantos dos três componentes diferem; além disso, como todas as árvores têm o mesmo tamanho, o efeito de tamanho da TED (que é limitada inferiormente pela diferença entre os números de nós) não atua. Por isso, o teste principal do efeito da TED usa árvores com $k=3$ substituintes (as bases de origem têm até três fragmentos por anel), em que as árvores têm tamanhos diferentes e a distância é mais informativa, e o caso $k=1$ é reportado como controle.
+
+\subsection{Braços do experimento}
+
+A Tabela~\ref{tab:bracos} define os braços. Todos usam o mesmo catálogo, os mesmos anéis-semente, as mesmas pontes, o mesmo pipeline de junção e o mesmo número $N$ de candidatos aceitos.
+
+\begin{table}[htb]
+	\centering
+	\caption{Braços do experimento (todos com mesmo $N$, mesmos anéis-semente e mesmo pipeline).}
+	\label{tab:bracos}
+	\footnotesize
+	\begin{tabular}{p{1.2cm}p{5.6cm}p{7.6cm}}
+		\hline
+		\textbf{Braço} & \textbf{Parceiro do anel-semente} & \textbf{Papel} \\
+		\hline
+		A & Sorteio uniforme & Baseline mínimo \\
+		B & Sorteio pareado por tamanho de árvore & Controla o efeito de tamanho ($k=3$) \\
+		C & Maior distância de Tanimoto (ECFP4 do anel) entre os $n_s$ sorteados & Concorrente simples, sem árvore \\
+		D & Maior TED entre os $n_s$ sorteados & Proposta \\
+		E & MaxMin sobre o espaço enumerado (ou amostra grande dele) & Limite superior de diversidade \\
+		\hline
+	\end{tabular}
+	\fonte{Elaborado pela autora.}
+\end{table}
+
+Cruzam-se ainda os braços A e D com a guia de conjugação ligada e desligada (ablação), de modo que o efeito da seleção e o do \textit{feedback} sejam separáveis. O espaço enumerado ($\approx 9{,}3\times10^{7}$ combinações com $k=1$) serve de referência de cobertura. A geração de um candidato custa cerca de $3$~ms nas medições atuais, de modo que enumerar o espaço completo custaria da ordem de $80$ horas de CPU, e a matriz de TED entre todos os anéis (cerca de $4{,}6\times10^{6}$ pares, $\approx 0{,}2$~ms cada) leva cerca de 7 minutos. A justificativa para amostrar não é, portanto, o custo de gerar, mas o da avaliação de maior nível das moléculas (Seção~\ref{sec:validacao}), cujo custo por molécula deve ser medido no piloto.
+
+\subsection{Métricas de avaliação}
+
+Para evitar circularidade (o braço C otimiza o Tanimoto sobre ECFP4 e ganharia trivialmente por essa métrica), a diversidade é avaliada por várias medidas independentes do critério de seleção: diversidade interna por Tanimoto sobre ECFP4 e sobre \textit{atom-pair} (média de $1-$ similaridade entre pares), número de esqueletos de Bemis--Murcko distintos, e cobertura do espaço enumerado (fração de esqueletos e de pares anel-base distintos atingida). \emph{Válida} é a molécula que passa na sanitização do RDKit com valência correta; a validade é uma restrição do pipeline, e não efeito da seleção, e o número de novas tentativas por candidato é reportado como custo. \emph{Nova} é a molécula cujo SMILES canônico não consta da base de origem do catálogo nem de um banco público (PubChem, consultado por InChIKey), comparação obrigatória. O indicador de conjugação é o número de átomos pesados no maior sistema conjugado (tamanho absoluto, e não fração), pois o deslocamento da absorção depende da extensão da conjugação, e não da proporção dela na molécula.
+
+\subsection{Plano estatístico}
+
+Cada braço gera $N=1000$ candidatos, com $R=30$ repetições, cada uma com uma \textit{seed} distinta do gerador de números aleatórios, e as comparações são feitas sempre a $N$ igual, pois a diversidade interna depende do tamanho do conjunto. Usa-se o teste de Mann--Whitney (bilateral) sobre as $R$ medidas por braço, com $\alpha=0{,}05$ e correção de Holm para as comparações múltiplas, e o tamanho de efeito é reportado pelo $\delta$ de Cliff. A diferença mínima de interesse na diversidade interna é de $0{,}02$ (escala de $1-$ Tanimoto), definida \textit{a priori} e a ser calibrada no piloto.
+
+\subsection{Critérios de avaliação}
+
+\begin{description}
+	\item[Efeito da TED.] Com $k=3$, o braço D tem diversidade interna maior do que os braços A e B por pelo menos $0{,}02$, em todas as métricas independentes do critério. \emph{Resultado desfavorável:} diferença menor que $0{,}02$ ou não significativa para A ou B, ou ganho que desaparece em B (artefato de tamanho). \emph{Evidência:} tabela de diversidade por braço, com testes, e gráfico de caixas por métrica.
+	\item[Mecanismo.] A TED entre o anel-semente e o parceiro correlaciona-se com a distância de Tanimoto (ECFP4) entre a molécula gerada e o anel-semente, controlando-se a ponte. Usa-se Spearman, e conta-se como positiva $\rho\geq 0{,}3$ com intervalo de confiança de 95\% (\textit{bootstrap}) que exclua zero. \emph{Resultado desfavorável:} $\rho<0{,}3$ ou intervalo que inclua zero. \emph{Evidência:} gráfico de dispersão (TED $\times$ distância final) por ponte, com o $\rho$ e seu intervalo.
+	\item[Efeito da guia.] A guia aumenta o indicador médio de conjugação sem reduzir a diversidade interna em mais de $0{,}02$ em relação ao mesmo braço sem guia. \emph{Resultado desfavorável:} queda de diversidade maior que $0{,}02$, ou ausência de aumento do indicador. \emph{Evidência:} tabela da ablação (seleção $\times$ guia).
+\end{description}
+
+\section{Validação espectroscópica}
+\label{sec:validacao}
+
+
+O indicador de conjugação é uma triagem e não prevê o comprimento de onda de absorção, que depende também de efeitos doador--aceitador, planaridade e substituintes, e da intensidade da banda, não apenas da energia da transição. Propõe-se validar um subconjunto de 200 moléculas, estratificado em quintis do indicador (40 por quintil), com geometrias otimizadas por xTB (GFN2) e espectros por sTDA-xTB, obtendo-se o comprimento de onda de maior absorção e a força do oscilador. Em 20 dessas moléculas, os resultados serão calibrados por TD-DFT (funcional e base a definir). A métrica é a correlação de Spearman entre o indicador e cada uma dessas duas grandezas. Sem essa validação, os candidatos são descritos apenas como tendo ``indicadores favoráveis'' à absorção, e não como absorvedores comprovados.
+
