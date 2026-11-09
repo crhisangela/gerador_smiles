@@ -4,7 +4,7 @@ AUXOCROMOS: dict[int, str] = {
     3:  "C",
     4:  "CC",
     5:  "Cl",
-    6:  "[N+](=O)O",
+    6:  "[N+](=O)[O-]",
     7:  "OC",
     8:  "N=O",
     9:  "N(CC)CC",
